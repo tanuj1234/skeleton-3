@@ -26,12 +26,15 @@ public class ReceiptDao {
                 .returning(RECEIPTS.ID)
                 .fetchOne();
 
-        checkState(receiptsRecord != null && receiptsRecord.getId() != null, "Insert failed");
+        checkState(receiptsRecord != null && receiptsRecord.getId() != null, "Could Not Insert");
 
         return receiptsRecord.getId();
     }
 
     public List<ReceiptsRecord> getAllReceipts() {
         return dsl.selectFrom(RECEIPTS).fetch();
+    }
+    public List<ReceiptsRecord> getAllReceiptsWithReceiptId(List<Integer> receiptIds) {
+        return dsl.selectFrom(RECEIPTS).where(RECEIPTS.ID.in(receiptIds)).fetch();
     }
 }
