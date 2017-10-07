@@ -6,6 +6,7 @@ import com.google.protobuf.ByteString;
 import java.math.BigDecimal;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.List;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -45,18 +46,24 @@ public class ReceiptImageController {
             BatchAnnotateImagesResponse responses = client.batchAnnotateImages(Collections.singletonList(request));
             AnnotateImageResponse res = responses.getResponses(0);
 
+            // String merchantName = null;
+            // BigDecimal amount = null;
+            List<EntityAnnotation> annotationList = res.getTextAnnotationsList();
+
             String merchantName = null;
             BigDecimal amount = null;
 
-            // Your Algo Here!!
-            // Sort text annotations by bounding polygon.  Top-most non-decimal text is the merchant
-            // bottom-most decimal text is the total amount
-            for (EntityAnnotation annotation : res.getTextAnnotationsList()) {
-                out.printf("Position : %s\n", annotation.getBoundingPoly());
-                out.printf("Text: %s\n", annotation.getDescription());
-            }
+            for (EntityAnnotation annotation:  annotationList) {
 
-            //TextAnnotation fullTextAnnotation = res.getFullTextAnnotation();
+                String a = annotation.getDescription();
+
+                if (!a.matches("^\\d*\\.\\d+|\\d+\\.\\d*$") && merchantName == null) {
+                    merchantName = a.split("\n",2)[0];
+                }
+                if (a.matches("^\\d*\\.\\d+|\\d+\\.\\d*$")) {
+                    amount = new BigDecimal(annotation.getDescription());
+                }
+            }
             return new ReceiptSuggestionResponse(merchantName, amount);
         }
     }
